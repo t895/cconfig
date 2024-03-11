@@ -16,7 +16,7 @@ pub struct Config {
 }
 
 impl Config {
-    const TAG: &'static str = "[rs-config]";
+    const TAG: &'static str = "[cconfig]";
 
     const KEY_VALUE_SEPARATOR: char = '=';
     const CATEGORY_START: char = '[';

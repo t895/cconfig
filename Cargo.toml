@@ -1,5 +1,5 @@
 [package]
-name = "rs-config"
+name = "cconfig"
 version = "0.1.0"
 edition = "2021"
 
