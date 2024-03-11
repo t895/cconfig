@@ -2,7 +2,7 @@ use std::io::{Read, Write};
 use std::fmt::Display;
 use std::str::FromStr;
 
-use crate::settings::Setting;
+use crate::setting::Setting;
 
 pub enum LineEnding {
     LF,
@@ -26,7 +26,7 @@ impl Config {
 
     pub fn new(file_path: &String, line_ending: LineEnding, padding: bool) -> Config {
         let settings = Self::load(file_path);
-        Config {
+        Self {
             file_path: file_path.clone(),
             line_ending,
             padding,

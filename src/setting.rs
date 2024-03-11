@@ -16,7 +16,7 @@ impl Setting {
             key.clone()
         };
 
-        Setting {
+        Self {
             key: new_key,
             category: category.clone(),
             value: value.to_string(),

@@ -1,4 +1,4 @@
-mod settings;
+mod setting;
 mod config;
 
 use config::Config;
