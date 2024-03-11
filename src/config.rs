@@ -64,11 +64,10 @@ impl Config {
         };
 
         let mut settings_string = String::from("");
-        let padding = if self.padding {
-            String::from(" ")
-        } else {
-            String::from("")
-        };
+        let mut padding = String::from("");
+        if self.padding {
+            padding.push(' ')
+        }
 
         for category in sorted_categories {
             let mut category_string = format!("{}{}{}{}", Self::CATEGORY_START, category.0, Self::CATEGORY_END, line_ending);
