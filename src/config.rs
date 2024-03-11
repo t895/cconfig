@@ -33,16 +33,28 @@ impl Config {
     }
 
     pub fn save(&self) {
-        let mut categories: std::collections::HashMap<String, Vec<&Setting>> = std::collections::HashMap::new();
+        let mut categories_map: std::collections::HashMap<String, Vec<&Setting>> = std::collections::HashMap::new();
         for setting in self.settings.iter() {
-            match categories.get_mut(&setting.1.get_category()) {
+            match categories_map.get_mut(setting.1.get_category()) {
                 Some(vec) => vec.push(setting.1),
                 None => {
                     let mut settings = Vec::<&Setting>::new();
                     settings.push(setting.1);
-                    categories.insert(setting.1.get_category(), settings);
+                    categories_map.insert(setting.1.get_category().clone(), settings);
                 },
             }
+        }
+
+        // Sort categories alphabetically
+        let mut sorted_categories: Vec<(String, Vec<&Setting>)> = Vec::new();
+        for category in categories_map {
+            sorted_categories.push((category.0, category.1))
+        }
+        sorted_categories.sort_by(|a, b| a.0.cmp(&b.0));
+
+        // Sort keys within each category alphabetically
+        for category in sorted_categories.iter_mut() {
+            category.1.sort_by(|a, b| a.get_key().cmp(b.get_key()))
         }
 
         let line_ending = match &self.line_ending {
@@ -58,8 +70,7 @@ impl Config {
             String::from("")
         };
 
-        // TODO: Sort categories alphabetically - current order is non-deterministic
-        for category in categories {
+        for category in sorted_categories {
             let mut category_string = format!("{}{}{}{}", Self::CATEGORY_START, category.0, Self::CATEGORY_END, line_ending);
             for setting in category.1 {
                 category_string.push_str(format!("{}{}{}{}{}{}", setting.get_key(), padding, Self::KEY_VALUE_SEPARATOR, padding, setting.get_value_string(), line_ending).as_str());
@@ -88,11 +99,11 @@ impl Config {
         self.settings = Self::load(&self.file_path)
     }
 
-    pub fn get(&self, category: &String, key: &String) -> Option<&Setting> {
-        self.settings.get(&Self::get_setting_key(&category, &key))
+    pub fn get(&mut self, category: &String, key: &String) -> Option<&mut Setting> {
+        self.settings.get_mut(&Self::get_setting_key(&category, &key))
     }
 
-    pub fn add<T: std::fmt::Display>(&mut self, key: String, category: String, value: T) {
+    pub fn add<T: std::fmt::Display>(&mut self, category: &String, key: &String, value: &T) {
         self.settings.insert(Self::get_setting_key(&category, &key), Setting::new(key, category, value));
     }
 
@@ -101,6 +112,31 @@ impl Config {
     }
 
     fn open_or_create(file_path: &String, write: bool) -> Result<std::fs::File, std::io::Error> {
+        let mut file_dir: &str = &file_path;
+        match file_path.rfind('/') {
+            Some(unix_pos) => {
+                file_dir = &file_path[0..unix_pos];
+            }
+            None => {
+                match file_path.rfind('\\') {
+                    Some (win_pos) => {
+                        file_dir = &file_path[0..win_pos];
+                    }
+                    None => {
+                        println!("{} File exists in current dir, not breaking path.", Self::TAG);
+                    }
+                }
+            }
+        }
+
+        match std::fs::create_dir_all(file_dir) {
+            Ok(_) => println!("{} Successfully created directories to config file.", Self::TAG),
+            Err(e) => {
+                println!("{} Failed to create directories to config file! - {}", Self::TAG, e);
+                return Err(e);
+            }
+        }
+
         if write {
             std::fs::OpenOptions::new()
                 .read(true)
@@ -187,7 +223,7 @@ impl Config {
                 None => continue,
             };
 
-            settings.insert(Self::get_setting_key(&category, &key), Setting::new(key, category.clone(), value));
+            settings.insert(Self::get_setting_key(&category, &key), Setting::new(&category, &key, &value));
             line_number += 1;
         }
 
