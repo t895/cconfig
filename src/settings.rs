@@ -1,4 +1,5 @@
-use std::fmt::Formatter;
+use std::fmt::{Formatter, Display};
+use std::str::FromStr;
 
 pub struct Setting {
     key: String,
@@ -7,7 +8,7 @@ pub struct Setting {
 }
 
 impl Setting {
-    pub fn new<T: std::fmt::Display>(key: &String, category: &String, value: &T) -> Setting {
+    pub fn new<T: Display + FromStr>(key: &String, category: &String, value: &T) -> Setting {
         let new_key: String = if key.contains("=") {
             let temp_key = key.clone();
             temp_key.replace("=", "")
@@ -30,7 +31,7 @@ impl Setting {
         &self.category
     }
 
-    pub fn set_value<T: std::fmt::Display>(&mut self, value: T) {
+    pub fn set_value<T: Display + FromStr>(&mut self, value: T) {
         self.value = value.to_string()
     }
 
@@ -38,7 +39,7 @@ impl Setting {
         &self.value
     }
 
-    pub fn get_value<T: std::str::FromStr>(&self, default_value: T) -> T {
+    pub fn get_value<T: Display + FromStr>(&self, default_value: T) -> T {
         self.value.parse::<T>().unwrap_or(default_value)
     }
 }

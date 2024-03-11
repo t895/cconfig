@@ -1,4 +1,6 @@
 use std::io::{Read, Write};
+use std::fmt::Display;
+use std::str::FromStr;
 
 use crate::settings::Setting;
 
@@ -102,7 +104,7 @@ impl Config {
         self.settings.get_mut(&Self::get_setting_key(&category, &key))
     }
 
-    pub fn add<T: std::fmt::Display>(&mut self, category: &String, key: &String, value: &T) {
+    pub fn add<T: Display + FromStr>(&mut self, category: &String, key: &String, value: &T) {
         self.settings.insert(Self::get_setting_key(&category, &key), Setting::new(key, category, value));
     }
 
@@ -196,14 +198,14 @@ impl Config {
             let first_char = match chars.nth(0) {
                 Some(value) => value,
                 None => {
-                    print!("{} Failed to parse characters on line {}, skipping!", Self::TAG, line_number);
+                    println!("{} Failed to parse characters on line {}, skipping!", Self::TAG, line_number);
                     continue
                 },
             };
             let last_char = match chars.last() {
                 Some(value) => value,
                 None => {
-                    print!("{} Failed to parse characters on line {}, skipping!", Self::TAG, line_number);
+                    println!("{} Failed to parse characters on line {}, skipping!", Self::TAG, line_number);
                     continue
                 },
             };
@@ -222,14 +224,14 @@ impl Config {
             let key = match key_value.first() {
                 Some(value) => value.trim().to_string(),
                 None => {
-                    print!("{} Failed to parse key on line {}, skipping!", Self::TAG, line_number);
+                    println!("{} Failed to parse key on line {}, skipping!", Self::TAG, line_number);
                     continue
                 },
             };
             let value = match key_value.last() {
                 Some(value) => value.trim().to_string(),
                 None => {
-                    print!("{} Failed to parse value on line {}, skipping!", Self::TAG, line_number);
+                    println!("{} Failed to parse value on line {}, skipping!", Self::TAG, line_number);
                     continue
                 },
             };
