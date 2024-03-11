@@ -195,11 +195,17 @@ impl Config {
             let mut chars = line.chars();
             let first_char = match chars.nth(0) {
                 Some(value) => value,
-                None => continue,
+                None => {
+                    print!("{} Failed to parse characters on line {}, skipping!", Self::TAG, line_number);
+                    continue
+                },
             };
             let last_char = match chars.last() {
                 Some(value) => value,
-                None => continue,
+                None => {
+                    print!("{} Failed to parse characters on line {}, skipping!", Self::TAG, line_number);
+                    continue
+                },
             };
 
             if first_char == Self::CATEGORY_START && last_char == Self::CATEGORY_END {
@@ -209,17 +215,23 @@ impl Config {
 
             let key_value: Vec<&str> = line.split(Self::KEY_VALUE_SEPARATOR).collect();
             if key_value.len() != 2 {
-                println!("{} Invalid key-value pair on line {}", Self::TAG, line_number);
+                println!("{} Invalid key-value pair on line {}, skipping!", Self::TAG, line_number);
                 continue;
             }
 
             let key = match key_value.first() {
                 Some(value) => value.trim().to_string(),
-                None => continue,
+                None => {
+                    print!("{} Failed to parse key on line {}, skipping!", Self::TAG, line_number);
+                    continue
+                },
             };
             let value = match key_value.last() {
                 Some(value) => value.trim().to_string(),
-                None => continue,
+                None => {
+                    print!("{} Failed to parse value on line {}, skipping!", Self::TAG, line_number);
+                    continue
+                },
             };
 
             settings.insert(Self::get_setting_key(&category, &key), Setting::new(&category, &key, &value));
