@@ -111,6 +111,10 @@ impl Config {
         self.settings.remove(&Self::get_setting_key(&category, &key))
     }
 
+    pub fn has_setting(&self, category: &String, key: &String) -> bool {
+        self.settings.contains_key(&Self::get_setting_key(category, key))
+    }
+
     fn open_or_create(file_path: &String, write: bool) -> Result<std::fs::File, std::io::Error> {
         let mut file_dir: &str = &file_path;
         match file_path.rfind('/') {
