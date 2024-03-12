@@ -88,7 +88,6 @@ impl Config {
                 return;
             },
         };
-        println!("{} Settings data to be written -\n{}", Self::TAG, &settings_string);
 
         match file.write_all(settings_string.as_bytes()) {
             Ok(_) => println!("{} Successfully wrote settings to config file.", Self::TAG),
@@ -195,29 +194,33 @@ impl Config {
         let mut category = String::from("");
         for line in lines {
             let mut chars = line.chars();
-            let first_char = match chars.nth(0) {
+            let first_char = match chars.next() {
                 Some(value) => value,
                 None => {
-                    println!("{} Failed to parse characters on line {}, skipping!", Self::TAG, line_number);
+                    // Don't warn user about failing to read this line. It's most likely empty.
+                    line_number += 1;
                     continue
                 },
             };
             let last_char = match chars.last() {
                 Some(value) => value,
                 None => {
-                    println!("{} Failed to parse characters on line {}, skipping!", Self::TAG, line_number);
+                    println!("{} Failed to parse last character on line {}, skipping!", Self::TAG, line_number);
+                    line_number += 1;
                     continue
                 },
             };
 
             if first_char == Self::CATEGORY_START && last_char == Self::CATEGORY_END {
                 category = line[1..line.len() - 1].to_string();
+                line_number += 1;
                 continue;
             }
 
             let key_value: Vec<&str> = line.split(Self::KEY_VALUE_SEPARATOR).collect();
             if key_value.len() != 2 {
                 println!("{} Invalid key-value pair on line {}, skipping!", Self::TAG, line_number);
+                line_number += 1;
                 continue;
             }
 
@@ -225,6 +228,7 @@ impl Config {
                 Some(value) => value.trim().to_string(),
                 None => {
                     println!("{} Failed to parse key on line {}, skipping!", Self::TAG, line_number);
+                    line_number += 1;
                     continue
                 },
             };
@@ -232,6 +236,7 @@ impl Config {
                 Some(value) => value.trim().to_string(),
                 None => {
                     println!("{} Failed to parse value on line {}, skipping!", Self::TAG, line_number);
+                    line_number += 1;
                     continue
                 },
             };
