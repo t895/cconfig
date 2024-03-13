@@ -2,7 +2,6 @@ use std::collections::{BinaryHeap, HashMap};
 use std::io::{Read, Write};
 use std::fmt::Display;
 use std::str::FromStr;
-use std::cmp::Reverse;
 
 use crate::setting::Setting;
 
@@ -37,9 +36,9 @@ impl Config {
     }
 
     pub fn save(&self) {
-        let mut sorted_settings: BinaryHeap<Reverse<&Setting>> = BinaryHeap::<Reverse<&Setting>>::new();
+        let mut sorted_settings: Vec<&Setting> = Vec::<&Setting>::new();
         for setting in self.settings.iter() {
-            sorted_settings.push(Reverse(setting.1));
+            sorted_settings.push(setting.1);
         }
 
         let line_ending = match &self.line_ending {
@@ -54,24 +53,19 @@ impl Config {
             padding.push(' ')
         }
 
-        let len = sorted_settings.len();
+        sorted_settings.sort_by(|a, b| a.cmp(b));
         let mut current_category = String::from("");
-        for _ in 0..len {
-            let setting = match sorted_settings.pop() {
-                Some(value) => value,
-                None => break,
-            };
-
-            if current_category != *setting.0.get_category() {
+        for setting in sorted_settings {
+            if current_category != *setting.get_category() {
                 if !current_category.is_empty() {
                     settings_string.push_str(&line_ending);
                 }
 
                 current_category.clear();
-                current_category.push_str(setting.0.get_category());
+                current_category.push_str(setting.get_category());
                 settings_string.push_str(&format!("{}{}{}{line_ending}", Self::CATEGORY_START, current_category, Self::CATEGORY_END));
             }
-            settings_string.push_str(&format!("{}{padding}{}{padding}{}{line_ending}", setting.0.get_key(), Self::KEY_VALUE_SEPARATOR, setting.0.get_value_string()));
+            settings_string.push_str(&format!("{}{padding}{}{padding}{}{line_ending}", setting.get_key(), Self::KEY_VALUE_SEPARATOR, setting.get_value_string()));
         }
 
         println!("{} Opening file {} for saving", Self::TAG, &self.file_path);
