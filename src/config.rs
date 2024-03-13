@@ -26,7 +26,7 @@ impl Config {
     const CATEGORY_END: char = ']';
 
     pub fn new(file_path: &String, line_ending: LineEnding, padding: bool) -> Config {
-        let settings = Self::load(file_path);
+        let settings = Self::load(file_path, None);
         Self {
             file_path: file_path.clone(),
             line_ending,
@@ -84,7 +84,9 @@ impl Config {
     }
 
     pub fn reload(&mut self) {
-        self.settings = Self::load(&self.file_path)
+        let previous_size = Some(self.settings.len());
+        self.settings.clear();
+        self.settings = Self::load(&self.file_path, previous_size);
     }
 
     pub fn get(&mut self, category: &String, key: &String) -> Option<&Setting> {
@@ -155,8 +157,12 @@ impl Config {
         format!("{}{}", category, key)
     }
 
-    fn load(file_path: &String) -> HashMap<String, Setting> {
+    fn load(file_path: &String, previous_size: Option<usize>) -> HashMap<String, Setting> {
         let mut settings = HashMap::new();
+        if previous_size.is_some() {
+            settings.reserve(previous_size.unwrap());
+        }
+
         let mut settings_file_string = String::from("");
         {
             let mut settings_file = match Self::open_or_create(file_path, false) {
