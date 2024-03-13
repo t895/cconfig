@@ -1,6 +1,8 @@
+use std::collections::{BinaryHeap, HashMap};
 use std::io::{Read, Write};
 use std::fmt::Display;
 use std::str::FromStr;
+use std::cmp::Reverse;
 
 use crate::setting::Setting;
 
@@ -14,7 +16,7 @@ pub struct Config {
     file_path: String,
     line_ending: LineEnding,
     padding: bool,
-    settings: std::collections::HashMap<String, Setting>,
+    settings: HashMap<String, Setting>,
 }
 
 impl Config {
@@ -35,28 +37,9 @@ impl Config {
     }
 
     pub fn save(&self) {
-        let mut categories_map: std::collections::HashMap<String, Vec<&Setting>> = std::collections::HashMap::new();
+        let mut sorted_settings: BinaryHeap<Reverse<&Setting>> = BinaryHeap::<Reverse<&Setting>>::new();
         for setting in self.settings.iter() {
-            match categories_map.get_mut(setting.1.get_category()) {
-                Some(vec) => vec.push(setting.1),
-                None => {
-                    let mut settings = Vec::<&Setting>::new();
-                    settings.push(setting.1);
-                    categories_map.insert(setting.1.get_category().clone(), settings);
-                },
-            }
-        }
-
-        // Sort categories alphabetically
-        let mut sorted_categories: Vec<(String, Vec<&Setting>)> = Vec::new();
-        for category in categories_map {
-            sorted_categories.push((category.0, category.1))
-        }
-        sorted_categories.sort_by(|a, b| a.0.cmp(&b.0));
-
-        // Sort keys within each category alphabetically
-        for category in sorted_categories.iter_mut() {
-            category.1.sort_by(|a, b| a.get_key().cmp(b.get_key()))
+            sorted_settings.push(Reverse(setting.1));
         }
 
         let line_ending = match &self.line_ending {
@@ -71,13 +54,24 @@ impl Config {
             padding.push(' ')
         }
 
-        for category in sorted_categories {
-            let mut category_string = format!("{}{}{}{}", Self::CATEGORY_START, category.0, Self::CATEGORY_END, line_ending);
-            for setting in category.1 {
-                category_string.push_str(format!("{}{}{}{}{}{}", setting.get_key(), padding, Self::KEY_VALUE_SEPARATOR, padding, setting.get_value_string(), line_ending).as_str());
+        let len = sorted_settings.len();
+        let mut current_category = String::from("");
+        for _ in 0..len {
+            let setting = match sorted_settings.pop() {
+                Some(value) => value,
+                None => break,
+            };
+
+            if current_category != *setting.0.get_category() {
+                if !current_category.is_empty() {
+                    settings_string.push_str(&line_ending);
+                }
+
+                current_category.clear();
+                current_category.push_str(setting.0.get_category());
+                settings_string.push_str(&format!("{}{}{}{line_ending}", Self::CATEGORY_START, current_category, Self::CATEGORY_END));
             }
-            category_string.push_str(&line_ending);
-            settings_string.push_str(&category_string);
+            settings_string.push_str(&format!("{}{padding}{}{padding}{}{line_ending}", setting.0.get_key(), Self::KEY_VALUE_SEPARATOR, setting.0.get_value_string()));
         }
 
         println!("{} Opening file {} for saving", Self::TAG, &self.file_path);
@@ -99,7 +93,11 @@ impl Config {
         self.settings = Self::load(&self.file_path)
     }
 
-    pub fn get(&mut self, category: &String, key: &String) -> Option<&mut Setting> {
+    pub fn get(&mut self, category: &String, key: &String) -> Option<&Setting> {
+        self.settings.get(&Self::get_setting_key(&category, &key))
+    }
+
+    pub fn get_mut(&mut self, category: &String, key: &String) -> Option<&mut Setting> {
         self.settings.get_mut(&Self::get_setting_key(&category, &key))
     }
 
@@ -126,9 +124,7 @@ impl Config {
                     Some (win_pos) => {
                         file_dir = &file_path[0..win_pos];
                     }
-                    None => {
-                        println!("{} File exists in current dir, not breaking path.", Self::TAG);
-                    }
+                    None => { /* No-op */ },
                 }
             }
         }
@@ -165,8 +161,8 @@ impl Config {
         format!("{}{}", category, key)
     }
 
-    fn load(file_path: &String) -> std::collections::HashMap<String, Setting> {
-        let mut settings = std::collections::HashMap::new();
+    fn load(file_path: &String) -> HashMap<String, Setting> {
+        let mut settings = HashMap::new();
         let mut settings_file_string = String::from("");
         {
             let mut settings_file = match Self::open_or_create(file_path, false) {
@@ -180,7 +176,8 @@ impl Config {
             let _settings_string_res = match settings_file.read_to_string(&mut settings_file_string) {
                 Ok(value) => value,
                 Err(_) => {
-                    println!("{} Failed to read config file to string!", Self::TAG);
+                    // Typically, this only fails when creating a new file, so it's best not to alert the user here.
+                    // TODO: Use a debug logging crate
                     return settings
                 },
             };

@@ -1,24 +1,19 @@
 use std::fmt::{Formatter, Display};
 use std::str::FromStr;
 
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub struct Setting {
-    key: String,
     category: String,
+    key: String,
     value: String,
 }
 
 impl Setting {
     pub fn new<T: Display + FromStr>(key: &String, category: &String, value: &T) -> Setting {
-        let new_key: String = if key.contains("=") {
-            let temp_key = key.clone();
-            temp_key.replace("=", "")
-        } else {
-            key.clone()
-        };
-
+        let new_key = key.replace('=', "");
         Self {
-            key: new_key,
             category: category.clone(),
+            key: new_key,
             value: value.to_string(),
         }
     }
