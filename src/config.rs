@@ -1,4 +1,4 @@
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::fmt::Display;
 use std::str::FromStr;
