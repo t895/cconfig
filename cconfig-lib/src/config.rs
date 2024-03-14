@@ -3,13 +3,8 @@ use std::io::{Read, Write};
 use std::fmt::Display;
 use std::str::FromStr;
 
+use crate::line_ending::LineEnding;
 use crate::setting::Setting;
-
-pub enum LineEnding {
-    LF,
-    CRLF,
-    CR,
-}
 
 pub struct Config {
     file_path: String,

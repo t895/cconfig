@@ -1,0 +1,5 @@
+[package]
+name = "cconfig-lib"
+version = "0.1.0"
+edition = "2021"
+authors = ["Charles Lombardo"]

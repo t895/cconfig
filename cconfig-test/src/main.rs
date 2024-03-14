@@ -1,11 +1,9 @@
-mod setting;
-mod config;
-
-use config::Config;
+use cconfig_lib::config::Config;
+use cconfig_lib::line_ending::LineEnding;
 
 fn main() -> Result<(), std::io::Error> {
     let file_path = String::from("test/foo.txt");
-    let mut config = Config::new(&file_path, config::LineEnding::LF, true);
+    let mut config = Config::new(&file_path, LineEnding::LF, true);
 
     let mut value: u128 = 20;
     for i in 0..1000 {
