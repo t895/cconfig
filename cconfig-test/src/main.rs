@@ -1,5 +1,4 @@
 use cconfig::config::Config;
-use cconfig::setting::Setting;
 use cconfig::line_ending::LineEnding;
 
 fn main() {
