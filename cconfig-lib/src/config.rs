@@ -20,6 +20,7 @@ impl Config {
     const CATEGORY_START: char = '[';
     const CATEGORY_END: char = ']';
 
+    /// Creates a new Config object.
     pub fn new(file_path: &String, line_ending: LineEnding, padding: bool) -> Config {
         let settings = Self::load(file_path, None);
         Self {
@@ -30,6 +31,7 @@ impl Config {
         }
     }
 
+    /// Serializes and saves all settings stored in Config's internal HashMap to disk.
     pub fn save(&self) {
         let mut sorted_settings: Vec<&Setting> = Vec::<&Setting>::new();
         for setting in self.settings.iter() {
@@ -51,7 +53,7 @@ impl Config {
         sorted_settings.sort_by(|a, b| a.cmp(b));
         let mut current_category = String::from("");
         for setting in sorted_settings {
-            if current_category != *setting.get_category() {
+            if current_category != *setting.get_category().replace("=", "") {
                 if !current_category.is_empty() {
                     settings_string.push_str(&line_ending);
                 }
@@ -60,7 +62,10 @@ impl Config {
                 current_category.push_str(setting.get_category());
                 settings_string.push_str(&format!("{}{}{}{line_ending}", Self::CATEGORY_START, current_category, Self::CATEGORY_END));
             }
-            settings_string.push_str(&format!("{}{padding}{}{padding}{}{line_ending}", setting.get_key(), Self::KEY_VALUE_SEPARATOR, setting.get_value_string()));
+
+            let formatted_key = setting.get_key().replace("=", "");
+            let formatted_value = setting.get_key().replace("=", "");
+            settings_string.push_str(&format!("{}{padding}{}{padding}{}{line_ending}", formatted_key, Self::KEY_VALUE_SEPARATOR, formatted_value));
         }
 
         println!("{} Opening file {} for saving", Self::TAG, &self.file_path);
@@ -78,32 +83,39 @@ impl Config {
         }
     }
 
+    /// Clears Config's internal HashMap and reloads the settings from disk.
     pub fn reload(&mut self) {
         let previous_size = Some(self.settings.len());
         self.settings.clear();
         self.settings = Self::load(&self.file_path, previous_size);
     }
 
+    /// Gets a reference to a given setting from the Config's internal HashMap if it exists.
     pub fn get(&mut self, category: &String, key: &String) -> Option<&Setting> {
         self.settings.get(&Self::get_setting_key(&category, &key))
     }
 
+    /// Gets a mutable reference to a given setting from the Config's internal HashMap if it exists.
     pub fn get_mut(&mut self, category: &String, key: &String) -> Option<&mut Setting> {
         self.settings.get_mut(&Self::get_setting_key(&category, &key))
     }
 
+    /// Adds a setting to the Config's internal HashMap.
     pub fn add<T: Display + FromStr>(&mut self, category: &String, key: &String, value: &T) {
         self.settings.insert(Self::get_setting_key(&category, &key), Setting::new(key, category, value));
     }
 
+    /// Removes a setting from the Config's internal HashMap.
     pub fn remove(&mut self, category: &String, key: &String) -> Option<Setting> {
         self.settings.remove(&Self::get_setting_key(&category, &key))
     }
 
+    /// Checks the Config's internal HashMap if it contains a given setting.
     pub fn has_setting(&self, category: &String, key: &String) -> bool {
         self.settings.contains_key(&Self::get_setting_key(category, key))
     }
 
+    /// Tries to open an existing file and creates one if it doesn't exist.
     fn open_or_create(file_path: &String, write: bool) -> Result<std::fs::File, std::io::Error> {
         let mut file_dir: &str = &file_path;
         match file_path.rfind('/') {
@@ -148,10 +160,12 @@ impl Config {
         }
     }
 
+    /// Gets the key used to insert/find a setting in the Config's internal HashMap
     fn get_setting_key(category: &String, key: &String) -> String {
         format!("{}{}", category, key)
     }
 
+    /// Reads the file from file_path and creates a new HashMap of settings with key-value pairs.
     fn load(file_path: &String, previous_size: Option<usize>) -> HashMap<String, Setting> {
         let mut settings = HashMap::new();
         if previous_size.is_some() {

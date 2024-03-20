@@ -20,7 +20,7 @@ fn main() -> Result<(), std::io::Error> {
         for j in 0..1000 {
             let key = format!("this-key-{}", j);
             let setting = config.get_mut(&category, &key).unwrap();
-            let value = setting.get_value(1u128) + 1;
+            let value = setting.get_value().unwrap_or(1u128) + 1;
             setting.set_value(value);
         }
     }

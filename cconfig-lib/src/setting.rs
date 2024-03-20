@@ -9,33 +9,41 @@ pub struct Setting {
 }
 
 impl Setting {
+    /// Creates a new Setting object. Copies key and category String data and serializes the value to a String.
     pub fn new<T: Display + FromStr>(key: &String, category: &String, value: &T) -> Setting {
-        let new_key = key.replace('=', "");
         Self {
             category: category.clone(),
-            key: new_key,
+            key: key.clone(),
             value: value.to_string(),
         }
     }
 
+    /// Retrieves a reference to this setting's key.
     pub fn get_key(&self) -> &String {
         &self.key
     }
 
+    // Retrieves a reference to this setting's category.
     pub fn get_category(&self) -> &String {
         &self.category
     }
 
+    /// Copies a String serialized value to this setting's internal value.
     pub fn set_value<T: Display + FromStr>(&mut self, value: T) {
         self.value = value.to_string()
     }
 
+    /// Retrieves a reference to this setting's internal String serialized value.
     pub fn get_value_string(&self) -> &String {
         &self.value
     }
 
-    pub fn get_value<T: Display + FromStr>(&self, default_value: T) -> T {
-        self.value.parse::<T>().unwrap_or(default_value)
+    /// Retrieves a newly allocated object from this setting's value interpreted as T.
+    pub fn get_value<T: Display + FromStr>(&self) -> Option<T> {
+        match self.value.parse::<T>() {
+            Ok(value) => Some(value),
+            Err(_) => None,
+        }
     }
 }
 
