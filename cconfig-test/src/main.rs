@@ -1,7 +1,8 @@
-use cconfig_lib::config::Config;
-use cconfig_lib::line_ending::LineEnding;
+use cconfig::config::Config;
+use cconfig::setting::Setting;
+use cconfig::line_ending::LineEnding;
 
-fn main() -> Result<(), std::io::Error> {
+fn main() {
     let file_path = String::from("test/foo.txt");
     let mut config = Config::new(&file_path, LineEnding::LF, true);
 
@@ -15,18 +16,17 @@ fn main() -> Result<(), std::io::Error> {
         }
     }
 
+    let default_value = 1u128;
     for i in 0..1000 {
         let category = format!("this-category-{}", i);
         for j in 0..1000 {
             let key = format!("this-key-{}", j);
-            let setting = config.get_mut(&category, &key).unwrap();
-            let value = setting.get_value().unwrap_or(1u128) + 1;
+            let setting = config.get_mut(&category, &key, &default_value);
+            let value = setting.get_value().unwrap_or(default_value) + 1;
             setting.set_value(value);
         }
     }
 
     config.save();
     config.reload();
-
-    Ok(())
 }

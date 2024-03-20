@@ -90,19 +90,30 @@ impl Config {
         self.settings = Self::load(&self.file_path, previous_size);
     }
 
-    /// Gets a reference to a given setting from the Config's internal HashMap if it exists.
-    pub fn get(&mut self, category: &String, key: &String) -> Option<&Setting> {
-        self.settings.get(&Self::get_setting_key(&category, &key))
+    /// Gets a reference to a given setting from the Config's internal HashMap and creates a new setting if it doesn't exist.
+    pub fn get<T: Display + FromStr>(&mut self, category: &String, key: &String, default_value: &T) -> &Setting {
+        if !self.has_setting(category, key) {
+            self.add(category, key, default_value);
+        }
+        self.settings.get(&Self::get_setting_key(&category, &key)).unwrap()
     }
 
-    /// Gets a mutable reference to a given setting from the Config's internal HashMap if it exists.
-    pub fn get_mut(&mut self, category: &String, key: &String) -> Option<&mut Setting> {
-        self.settings.get_mut(&Self::get_setting_key(&category, &key))
+    /// Gets a mutable reference to a given setting from the Config's internal HashMap and creates a new setting if it doesn't exist.
+    pub fn get_mut<T: Display + FromStr>(&mut self, category: &String, key: &String, default_value: &T) -> &mut Setting {
+        if !self.has_setting(category, key) {
+            self.add(category, key, default_value);
+        }
+        self.settings.get_mut(&Self::get_setting_key(&category, &key)).unwrap()
     }
 
-    /// Adds a setting to the Config's internal HashMap.
+    /// Assembles a new Setting to add to the Config's internal HashMap.
     pub fn add<T: Display + FromStr>(&mut self, category: &String, key: &String, value: &T) {
         self.settings.insert(Self::get_setting_key(&category, &key), Setting::new(key, category, value));
+    }
+
+    /// Adds a Setting to the Config's internal HashMap.
+    pub fn add_setting(&mut self, setting: Setting) {
+        self.settings.insert(Self::get_setting_key(setting.get_category(), setting.get_key()), setting);
     }
 
     /// Removes a setting from the Config's internal HashMap.

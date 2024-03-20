@@ -5,4 +5,4 @@ edition = "2021"
 authors = ["Charles Lombardo"]
 
 [dependencies]
-cconfig-lib = { path = "../cconfig-lib" }
+cconfig = { path = "../cconfig-lib" }

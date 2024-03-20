@@ -45,6 +45,15 @@ impl Setting {
             Err(_) => None,
         }
     }
+
+    /// Retrieves a newly allocated object from this setting's value interpreted as T.
+    /// Returns default_value if deserialization resulted in an error.
+    pub fn get_value_or<T: Display + FromStr>(&self, default_value: T) -> T {
+        match self.value.parse::<T>() {
+            Ok(value) => value,
+            Err(_) => default_value,
+        }
+    }
 }
 
 impl std::fmt::Display for Setting {
