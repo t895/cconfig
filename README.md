@@ -1,5 +1,5 @@
 # cconfig
-Basic config reader/writer written in Rust.
+Basic config.ini reader/writer written in Rust.
 
 ## Usage
 This library provides a Setting struct to hold individual setting data and a Config struct that manages them and a corresponding file. Simply create a Config instance and add all of your settings to it. 
